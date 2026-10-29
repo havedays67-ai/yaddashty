@@ -3,9 +3,9 @@
   "version": 1,
   "versionName": "1",
   "asset": "yaddashty-v1.apk",
-  "sizeBytes": 17657301,
-  "sha256": "04e8ac3667d226b6d0eeb8ec4f104987efbff5421d35f7d924ca88cfc4b86cb8",
-  "builtAt": "2026-10-29T12:22:23Z",
-  "commit": "1f3e70b9265f3a07e8ef16e108d9e03f22d1bcd0",
-  "runUrl": "https://github.com/havedays67-ai/yaddashty/actions/runs/40872528819"
+  "sizeBytes": 17673685,
+  "sha256": "8664552be22e6137f6e291ea684f40a85a19a28578ec5a1fd1375c8b5548023a",
+  "builtAt": "2026-10-29T13:18:26Z",
+  "commit": "a7d66bcedf5aa8cdc0621d3cf1834ff660095467",
+  "runUrl": "https://github.com/havedays67-ai/yaddashty/actions/runs/40880568394"
 }
