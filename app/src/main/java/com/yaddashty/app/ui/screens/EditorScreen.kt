@@ -184,7 +184,7 @@ fun EditorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 NoteAccents.forEachIndexed { index, accent ->
@@ -298,7 +298,7 @@ private fun ColorDot(color: Color, selected: Boolean, onClick: () -> Unit) {
     }
     Box(
         modifier = Modifier
-            .size(34.dp)
+            .size(30.dp)
             .clip(CircleShape)
             .background(fill)
             .border(

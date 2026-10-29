@@ -13,15 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.BrightnessAuto
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Share
@@ -38,21 +39,28 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yaddashty.app.ui.NotesViewModel
 import com.yaddashty.app.ui.toPersianDigits
 
 @Composable
 fun SettingsScreen(
     viewModel: NotesViewModel,
+    onOpenArchive: () -> Unit,
+    onOpenTrash: () -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    val themeMode = viewModel.themeMode.value
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val activeCount by viewModel.noteCount.collectAsStateWithLifecycle()
+    val archivedNotes by viewModel.archivedNotes.collectAsStateWithLifecycle()
+    val trashedNotes by viewModel.trashedNotes.collectAsStateWithLifecycle()
 
     fun shareBackup() {
         viewModel.exportBackup { json ->
@@ -78,7 +86,7 @@ fun SettingsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Description, contentDescription = "بازگشت")
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "بازگشت")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -105,7 +113,10 @@ fun SettingsScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("ظاهر برنامه", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(10.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         FilterChip(
                             selected = themeMode == "system",
                             onClick = { viewModel.setThemeMode("system") },
@@ -162,17 +173,17 @@ fun SettingsScreen(
                     ) {
                         StatTile(
                             label = "فعال",
-                            value = viewModel.noteCount.value,
+                            value = activeCount,
                             modifier = Modifier.weight(1f),
                         )
                         StatTile(
                             label = "بایگانی",
-                            value = viewModel.archivedNotes.value.size,
+                            value = archivedNotes.size,
                             modifier = Modifier.weight(1f),
                         )
                         StatTile(
                             label = "سطل زباله",
-                            value = viewModel.trashedNotes.value.size,
+                            value = trashedNotes.size,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -197,15 +208,15 @@ fun SettingsScreen(
                     SettingRow(
                         icon = Icons.Outlined.Archive,
                         title = "بایگانی",
-                        subtitle = "${toPersianDigits(viewModel.archivedNotes.value.size.toString())} یادداشت بایگانی‌شده",
-                        onClick = {},
+                        subtitle = "${toPersianDigits(archivedNotes.size.toString())} یادداشت بایگانی‌شده",
+                        onClick = onOpenArchive,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SettingRow(
                         icon = Icons.Outlined.Delete,
                         title = "سطل زباله",
-                        subtitle = "یادداشت‌های حذف‌شده را مدیریت کنید",
-                        onClick = {},
+                        subtitle = "${toPersianDigits(trashedNotes.size.toString())} یادداشت در سطل",
+                        onClick = onOpenTrash,
                     )
                 }
             }

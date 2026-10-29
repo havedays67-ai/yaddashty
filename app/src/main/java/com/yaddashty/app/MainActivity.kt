@@ -102,6 +102,8 @@ private fun YaddashtyRoot(viewModel: NotesViewModel) {
         composable("settings") {
             SettingsScreen(
                 viewModel = viewModel,
+                onOpenArchive = { navController.navigate("archive") },
+                onOpenTrash = { navController.navigate("trash") },
                 onBack = { navController.popBackStack() },
             )
         }
