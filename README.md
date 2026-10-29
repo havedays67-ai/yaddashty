@@ -17,7 +17,10 @@
 </div>
 
 <!-- build-info:start -->
-> 🛠 **وضعیت بیلد:** هر بار که شاخهٔ `main` به‌روزرسانی می‌شود، GitHub Actions پروژه را می‌سازد و APK تازه را روی همین نسخهٔ ۱ منتشر می‌کند.
+> 🛠 **آخرین بیلد موفق:** `2026-10-29T12:13:49Z`  
+> 📦 حجم فایل: 16.84 مگابایت · نسخه: **۱**  
+> 🔐 SHA-256: `564d91a540778f8883b405d331d557f11aa26ad1672a76a6bd09e96b13340bd4`  
+> [دانلود مستقیم APK](https://github.com/havedays67-ai/yaddashty/releases/latest/download/yaddashty-v1.apk)
 <!-- build-info:end -->
 
 ---
