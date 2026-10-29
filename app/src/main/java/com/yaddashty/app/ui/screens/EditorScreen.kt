@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
@@ -42,6 +41,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -80,6 +80,28 @@ fun EditorScreen(
     var dirty by remember(noteId) { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var startedBlank by remember(noteId) { mutableStateOf(false) }
+    val editHistory = remember(noteId) { mutableStateListOf<Triple<String, String, String>>() }
+    var lastHistoryPush by remember(noteId) { mutableStateOf(0L) }
+
+    /** Snapshots the three text fields, coalescing rapid keystrokes. */
+    fun pushSnapshot() {
+        val snapshot = Triple(title, body, tags)
+        val now = System.currentTimeMillis()
+        if (editHistory.lastOrNull() != snapshot && now - lastHistoryPush > 600) {
+            editHistory.add(snapshot)
+            lastHistoryPush = now
+            if (editHistory.size > 40) editHistory.removeAt(0)
+        }
+    }
+
+    fun undoEdit() {
+        val snapshot = editHistory.removeLastOrNull() ?: return
+        title = snapshot.first
+        body = snapshot.second
+        tags = snapshot.third
+        dirty = true
+        viewModel.saveEdited(noteId, title, body, colorIndex, tags, pinned)
+    }
 
     LaunchedEffect(note) {
         val current = note ?: return@LaunchedEffect
@@ -244,6 +266,7 @@ fun EditorScreen(
             OutlinedTextField(
                 value = title,
                 onValueChange = {
+                    pushSnapshot()
                     title = it
                     dirty = true
                 },
@@ -258,6 +281,7 @@ fun EditorScreen(
             OutlinedTextField(
                 value = tags,
                 onValueChange = {
+                    pushSnapshot()
                     tags = it
                     dirty = true
                 },
@@ -272,6 +296,7 @@ fun EditorScreen(
             OutlinedTextField(
                 value = body,
                 onValueChange = {
+                    pushSnapshot()
                     body = it
                     dirty = true
                 },
@@ -285,27 +310,28 @@ fun EditorScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(
-                    text = "ذخیرهٔ خودکار روشن است",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = "${toPersianDigits(wordCount(body).toString())} کلمه · ${toPersianDigits(body.length.toString())} نویسه",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(
+                    onClick = { undoEdit() },
+                    enabled = editHistory.isNotEmpty(),
+                ) { Text("واگرد") }
+                TextButton(
+                    onClick = {
+                        pushSnapshot()
+                        dirty = true
+                        persist()
+                    },
+                ) { Text("ذخیره") }
+                TextButton(onClick = { leaveEditor() }) { Text("بازگشت") }
             }
         }
     }
