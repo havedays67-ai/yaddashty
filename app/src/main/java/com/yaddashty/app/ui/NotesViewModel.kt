@@ -69,6 +69,40 @@ class NotesViewModel(
         }
     }
 
+    fun saveAndArchive(
+        id: Long,
+        title: String,
+        body: String,
+        color: Int,
+        tags: String,
+        pinned: Boolean,
+        archived: Boolean,
+        onDone: () -> Unit = {},
+    ) {
+        viewModelScope.launch {
+            repository.saveAndArchive(id, title, body, color, tags, pinned, archived)
+            onDone()
+        }
+    }
+
+    fun saveAndTrash(
+        id: Long,
+        title: String,
+        body: String,
+        color: Int,
+        tags: String,
+        onDone: () -> Unit = {},
+    ) {
+        viewModelScope.launch {
+            repository.saveAndTrash(id, title, body, color, tags)
+            onDone()
+        }
+    }
+
+    fun discardBlankNote(id: Long) {
+        viewModelScope.launch { repository.discardIfBlank(id) }
+    }
+
     fun duplicate(note: Note) {
         viewModelScope.launch { repository.duplicate(note) }
     }

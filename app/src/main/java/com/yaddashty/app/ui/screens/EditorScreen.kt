@@ -77,10 +77,12 @@ fun EditorScreen(
     var pinned by remember(noteId) { mutableStateOf(false) }
     var dirty by remember(noteId) { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var startedBlank by remember(noteId) { mutableStateOf(false) }
 
     LaunchedEffect(note) {
         val current = note ?: return@LaunchedEffect
         if (!loaded) {
+            startedBlank = current.title.isBlank() && current.body.isBlank() && current.tags.isBlank()
             title = current.title
             body = current.body
             colorIndex = current.color
@@ -93,16 +95,23 @@ fun EditorScreen(
     fun persist() {
         if (!loaded) return
         viewModel.saveEdited(noteId, title, body, colorIndex, tags, pinned)
+        dirty = false
     }
 
     LaunchedEffect(title, body, colorIndex, tags, pinned) {
         if (!loaded || !dirty) return@LaunchedEffect
         delay(900)
         viewModel.saveEdited(noteId, title, body, colorIndex, tags, pinned)
+        dirty = false
     }
 
     fun leaveEditor() {
-        persist()
+        if (startedBlank && title.isBlank() && body.isBlank() && tags.isBlank()) {
+            // An untouched "new note" draft should not pollute the notebook.
+            viewModel.discardBlankNote(noteId)
+        } else {
+            persist()
+        }
         onBack()
     }
 
@@ -157,9 +166,15 @@ fun EditorScreen(
                     IconButton(onClick = {
                         val current = note
                         if (current != null) {
-                            persist()
-                            viewModel.setArchived(current, !current.archived)
-                            onBack()
+                            viewModel.saveAndArchive(
+                                id = noteId,
+                                title = title,
+                                body = body,
+                                color = colorIndex,
+                                tags = tags,
+                                pinned = pinned,
+                                archived = !current.archived,
+                            ) { onBack() }
                         }
                     }) {
                         Icon(Icons.Outlined.Archive, contentDescription = "بایگانی")
@@ -276,9 +291,11 @@ fun EditorScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog = false
-                    val current = note
-                    if (current != null) viewModel.moveToTrash(current)
-                    onBack()
+                    if (note != null) {
+                        viewModel.saveAndTrash(noteId, title, body, colorIndex, tags) { onBack() }
+                    } else {
+                        onBack()
+                    }
                 }) { Text("حذف") }
             },
             dismissButton = {

@@ -94,7 +94,19 @@ CREATE TABLE notes (
 - پشتیبان‌گیری فقط با اکشن `ACTION_SEND` و انتخاب کاربر انجام می‌شود.
 - `allowBackup=true` برای انتقال بین گوشی‌ها فعال است و `data_extraction_rules` فقط دیتابیس یادداشت‌ها را شامل می‌شود.
 
-## ۷. نقشهٔ راه فنی
+## ۷. بازبینی نسخهٔ ۱ (رفع باگ)
+
+| مورد | Problem | راه‌حل |
+| --- | --- | --- |
+| ثبت کلاس Application | نام کلاس در Manifest با بستهٔ واقعی هم‌خوان نبود | ثبت نام کامل `com.yaddashty.app.data.YaddashtyApp` |
+| به‌روزرسانی UI | `NotesListScreen` از `StateFlow.value` می‌خواند و recompose نمی‌شد | استفاده از `collectAsStateWithLifecycle()` برای فهرست‌ها و شمارنده |
+| ذخیره/بایگانی هم‌زمان | دو coroutine موازی؛ نتیجهٔ نهایی نامشخص | متدهای `saveAndArchive` / `saveAndTrash` با یک `dao.update` |
+| پیش‌نویس خالی | ردیف خالی در دیتابیس باقی می‌ماند | `discardIfBlank` هنگام خروج از ویرایشگر |
+| پشتیبان JSON | escape دستی و اشتراک به‌صورت متن | ساخت با `JSONObject` و اشتراک فایل با `FileProvider` |
+| تکثیر | کپیِ یادداشت بایگانی‌شده در بایگانی می‌ماند | صفر کردن `archived` و `trashed` در کپی |
+| تم | خطای خواندن DataStore باعث خطا در ViewModel می‌شد | `.catch { emit(emptyPreferences()) }` |
+
+## ۸. نقشهٔ راه فنی
 
 - مهاجرت از برچسب رشته‌ای به جدول `tags` با رابطهٔ چندبه‌چند.
 - `Paging 3` در صورت بزرگ‌شدن فهرست.

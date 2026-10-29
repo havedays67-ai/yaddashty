@@ -14,7 +14,9 @@ fun formatCalendarDate(timestamp: Long): String =
     toPersianDigits(SimpleDateFormat("yyyy/MM/dd", Locale.US).format(Date(timestamp)))
 
 fun formatRelative(timestamp: Long): String {
-    val diffMinutes = (System.currentTimeMillis() - timestamp) / 60_000
+    val diffMillis = System.currentTimeMillis() - timestamp
+    if (diffMillis < 0) return formatCalendarDate(timestamp)
+    val diffMinutes = diffMillis / 60_000
     return when {
         diffMinutes < 1 -> "همین حالا"
         diffMinutes < 60 -> "${toPersianDigits(diffMinutes.toString())} دقیقه پیش"
@@ -25,4 +27,6 @@ fun formatRelative(timestamp: Long): String {
 }
 
 fun wordCount(body: String): Int =
-    body.trim().split(Regex("[\\s،.,؛!؟]+")).count { it.isNotBlank() }
+    body.trim()
+        .split(Regex("[\\s،.,؛:!؟()\\[\\]«»\"'…\\-]+"))
+        .count { word -> word.any { character -> character.isLetterOrDigit() } }

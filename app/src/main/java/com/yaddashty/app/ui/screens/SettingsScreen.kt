@@ -64,12 +64,30 @@ fun SettingsScreen(
 
     fun shareBackup() {
         viewModel.exportBackup { json ->
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/json"
-                putExtra(Intent.EXTRA_TEXT, json)
-                putExtra(Intent.EXTRA_SUBJECT, "پشتیبان یادداشتی")
+            runCatching {
+                val directory = java.io.File(context.cacheDir, "backups").apply { mkdirs() }
+                val file = java.io.File(directory, "yaddashty-backup.json")
+                file.writeText(json, Charsets.UTF_8)
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file,
+                )
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    putExtra(Intent.EXTRA_SUBJECT, "پشتیبان یادداشتی")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(intent, "ذخیره یا اشتراک پشتیبان"))
+            }.onFailure {
+                val fallback = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_TEXT, json)
+                    putExtra(Intent.EXTRA_SUBJECT, "پشتیبان یادداشتی")
+                }
+                context.startActivity(Intent.createChooser(fallback, "ذخیره یا اشتراک پشتیبان"))
             }
-            context.startActivity(Intent.createChooser(intent, "ذخیره یا اشتراک پشتیبان"))
         }
     }
 

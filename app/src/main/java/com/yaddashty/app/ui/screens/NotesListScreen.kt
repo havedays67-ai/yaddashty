@@ -56,6 +56,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -97,14 +98,24 @@ fun NotesListScreen(
     onOpenSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
+    val activeNotesState = viewModel.activeNotes
+    val archivedNotesState = viewModel.archivedNotes
+    val trashedNotesState = viewModel.trashedNotes
+    val activeCountState = viewModel.noteCount
+
     var query by rememberSaveable { mutableStateOf("") }
     var selectedTag by rememberSaveable { mutableStateOf<String?>(null) }
     var showEmptyTrashDialog by remember { mutableStateOf(false) }
 
+    val activeNotes by activeNotesState.collectAsStateWithLifecycle()
+    val archivedNotes by archivedNotesState.collectAsStateWithLifecycle()
+    val trashedNotes by trashedNotesState.collectAsStateWithLifecycle()
+    val activeCount by activeCountState.collectAsStateWithLifecycle()
+
     val source = when (mode) {
-        NoteMode.Active -> viewModel.activeNotes.value
-        NoteMode.Archived -> viewModel.archivedNotes.value
-        NoteMode.Trash -> viewModel.trashedNotes.value
+        NoteMode.Active -> activeNotes
+        NoteMode.Archived -> archivedNotes
+        NoteMode.Trash -> trashedNotes
     }
 
     val normalizedQuery = query.trim()
@@ -200,7 +211,7 @@ fun NotesListScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (mode == NoteMode.Active && onBack == null) {
-                item { WelcomeCard(activeCount = viewModel.noteCount.value) }
+                item { WelcomeCard(activeCount = activeCount) }
             }
 
             if (mode != NoteMode.Trash) {

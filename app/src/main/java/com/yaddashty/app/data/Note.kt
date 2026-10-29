@@ -11,6 +11,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * A single note. Tags are stored as a comma separated string because a note
@@ -136,11 +138,71 @@ class NoteRepository(private val dao: NoteDao) {
         )
     }
 
+    /**
+     * Saves the editor content and changes the archive state in one database
+     * write. Previously the two writes raced each other and archiving could be
+     * silently reverted by a late autosave.
+     */
+    suspend fun saveAndArchive(
+        id: Long,
+        title: String,
+        body: String,
+        color: Int,
+        tags: String,
+        pinned: Boolean,
+        archived: Boolean,
+    ) {
+        val existing = dao.findById(id) ?: return
+        dao.update(
+            existing.copy(
+                title = title.trim(),
+                body = body,
+                color = color,
+                tags = normalizeTags(tags),
+                pinned = if (archived) false else pinned,
+                archived = archived,
+                updatedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    suspend fun saveAndTrash(
+        id: Long,
+        title: String,
+        body: String,
+        color: Int,
+        tags: String,
+    ) {
+        val existing = dao.findById(id) ?: return
+        dao.update(
+            existing.copy(
+                title = title.trim(),
+                body = body,
+                color = color,
+                tags = normalizeTags(tags),
+                pinned = false,
+                archived = false,
+                trashed = true,
+                updatedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    /** Removes the empty draft created by the "new note" button when left untouched. */
+    suspend fun discardIfBlank(id: Long) {
+        val existing = dao.findById(id) ?: return
+        if (existing.title.isBlank() && existing.body.isBlank() && existing.tags.isBlank()) {
+            dao.deletePermanently(id)
+        }
+    }
+
     suspend fun duplicate(note: Note): Long = dao.insert(
         note.copy(
             id = 0L,
             title = if (note.title.isBlank()) "کپی یادداشت" else "${note.title} (کپی)",
             pinned = false,
+            archived = false,
+            trashed = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis(),
         ),
@@ -161,31 +223,26 @@ class NoteRepository(private val dao: NoteDao) {
 
     suspend fun exportJson(): String {
         val items = dao.getAllForExport()
-        val builder = StringBuilder()
-        builder.append("{\n  \"app\": \"Yaddashty\",\n  \"version\": 1,\n  \"exportedAt\": ")
-            .append(System.currentTimeMillis())
-            .append(",\n  \"notes\": [\n")
-        items.forEachIndexed { index, note ->
-            builder.append("    {\"id\": ").append(note.id)
-                .append(", \"title\": \"").append(escape(note.title))
-                .append("\", \"body\": \"").append(escape(note.body))
-                .append("\", \"tags\": \"").append(escape(note.tags))
-                .append("\", \"color\": ").append(note.color)
-                .append(", \"pinned\": ").append(note.pinned)
-                .append(", \"archived\": ").append(note.archived)
-                .append(", \"createdAt\": ").append(note.createdAt)
-                .append(", \"updatedAt\": ").append(note.updatedAt)
-                .append("}")
-            if (index != items.lastIndex) builder.append(',')
-            builder.append('\n')
+        val root = JSONObject()
+        root.put("app", "Yaddashty")
+        root.put("version", 1)
+        root.put("exportedAt", System.currentTimeMillis())
+        val notes = JSONArray()
+        items.forEach { note ->
+            notes.put(
+                JSONObject()
+                    .put("id", note.id)
+                    .put("title", note.title)
+                    .put("body", note.body)
+                    .put("tags", note.tags)
+                    .put("color", note.color)
+                    .put("pinned", note.pinned)
+                    .put("archived", note.archived)
+                    .put("createdAt", note.createdAt)
+                    .put("updatedAt", note.updatedAt),
+            )
         }
-        builder.append("  ]\n}\n")
-        return builder.toString()
+        root.put("notes", notes)
+        return root.toString(2)
     }
-
-    private fun escape(value: String): String = value
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-        .replace("\n", "\\n")
-        .replace("\r", "")
 }
