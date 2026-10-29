@@ -79,6 +79,7 @@ import com.yaddashty.app.data.tagList
 import com.yaddashty.app.ui.NotesViewModel
 import com.yaddashty.app.ui.formatRelative
 import com.yaddashty.app.ui.theme.NoteAccents
+import com.yaddashty.app.ui.searchKey
 import com.yaddashty.app.ui.toPersianDigits
 
 enum class NoteMode(val screenTitle: String) {
@@ -118,13 +119,14 @@ fun NotesListScreen(
         NoteMode.Trash -> trashedNotes
     }
 
-    val normalizedQuery = query.trim()
+    val queryKey = searchKey(query)
     val visibleNotes = source.filter { note ->
-        val matchesQuery = normalizedQuery.isEmpty() ||
-            note.title.contains(normalizedQuery, ignoreCase = true) ||
-            note.body.contains(normalizedQuery, ignoreCase = true) ||
-            note.tags.contains(normalizedQuery, ignoreCase = true)
-        val matchesTag = selectedTag == null || note.tagList().contains(selectedTag)
+        val matchesQuery = queryKey.isEmpty() ||
+            searchKey(note.title).contains(queryKey) ||
+            searchKey(note.body).contains(queryKey) ||
+            searchKey(note.tags).contains(queryKey)
+        val matchesTag = selectedTag == null ||
+            note.tagList().any { tag -> searchKey(tag) == searchKey(selectedTag) }
         matchesQuery && matchesTag
     }
 

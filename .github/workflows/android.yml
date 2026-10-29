@@ -111,6 +111,9 @@ jobs:
           "$AAPT2" dump badging releases/yaddashty-v1.apk | grep -E "^(package|application-label|sdkVersion|targetSdkVersion)" || true
           "$AAPT2" dump xmltree --file AndroidManifest.xml releases/yaddashty-v1.apk | grep -q "com.yaddashty.app.data.YaddashtyApp" \
             || { echo "Application class is not registered correctly"; exit 1; }
+          BADGING="$("$AAPT2" dump badging releases/yaddashty-v1.apk)"
+          echo "$BADGING" | grep -q "versionCode='1'" || { echo "versionCode must stay 1"; exit 1; }
+          echo "$BADGING" | grep -q "versionName='1'" || { echo "versionName must stay 1"; exit 1; }
           echo "APK manifest looks healthy"
 
       - name: Upload build artifact

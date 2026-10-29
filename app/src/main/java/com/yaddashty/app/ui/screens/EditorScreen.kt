@@ -38,11 +38,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,6 +107,27 @@ fun EditorScreen(
         dirty = false
     }
 
+    // Last safety net for the debounce window: if the editor disappears (back
+    // gesture, process death, navigation) the freshest draft is still written.
+    val pendingDraft by rememberUpdatedState(
+        EditorDraft(title, body, colorIndex, tags, pinned, loaded && dirty),
+    )
+    DisposableEffect(noteId) {
+        onDispose {
+            val draft = pendingDraft
+            if (draft.dirty) {
+                viewModel.saveEdited(
+                    noteId = noteId,
+                    title = draft.title,
+                    body = draft.body,
+                    color = draft.color,
+                    tags = draft.tags,
+                    pinned = draft.pinned,
+                )
+            }
+        }
+    }
+
     fun leaveEditor() {
         if (startedBlank && title.isBlank() && body.isBlank() && tags.isBlank()) {
             // An untouched "new note" draft should not pollute the notebook.
@@ -135,6 +158,7 @@ fun EditorScreen(
                 },
                 actions = {
                     IconButton(onClick = {
+                        if (!loaded) return@IconButton
                         pinned = !pinned
                         dirty = true
                         viewModel.saveEdited(noteId, title, body, colorIndex, tags, pinned)
@@ -150,6 +174,7 @@ fun EditorScreen(
                         )
                     }
                     IconButton(onClick = {
+                        if (!loaded) return@IconButton
                         val shareText = buildString {
                             append(title.ifBlank { "یادداشت" })
                             if (body.isNotBlank()) append("\n\n").append(body)
@@ -165,7 +190,7 @@ fun EditorScreen(
                     }
                     IconButton(onClick = {
                         val current = note
-                        if (current != null) {
+                        if (loaded && current != null) {
                             viewModel.saveAndArchive(
                                 id = noteId,
                                 title = title,
@@ -179,7 +204,9 @@ fun EditorScreen(
                     }) {
                         Icon(Icons.Outlined.Archive, contentDescription = "بایگانی")
                     }
-                    IconButton(onClick = { showDeleteDialog = true }) {
+                    IconButton(onClick = {
+                        if (loaded) showDeleteDialog = true
+                    }) {
                         Icon(Icons.Outlined.Delete, contentDescription = "حذف")
                     }
                 },
@@ -291,7 +318,7 @@ fun EditorScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog = false
-                    if (note != null) {
+                    if (loaded && note != null) {
                         viewModel.saveAndTrash(noteId, title, body, colorIndex, tags) { onBack() }
                     } else {
                         onBack()
@@ -339,3 +366,13 @@ private fun ColorDot(color: Color, selected: Boolean, onClick: () -> Unit) {
         }
     }
 }
+
+/** Snapshot of the editor fields used to flush the pending draft on dispose. */
+private data class EditorDraft(
+    val title: String,
+    val body: String,
+    val color: Int,
+    val tags: String,
+    val pinned: Boolean,
+    val dirty: Boolean,
+)
