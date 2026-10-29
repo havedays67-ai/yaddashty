@@ -120,13 +120,14 @@ fun NotesListScreen(
     }
 
     val queryKey = searchKey(query)
+    val activeTag = selectedTag
     val visibleNotes = source.filter { note ->
         val matchesQuery = queryKey.isEmpty() ||
             searchKey(note.title).contains(queryKey) ||
             searchKey(note.body).contains(queryKey) ||
             searchKey(note.tags).contains(queryKey)
-        val matchesTag = selectedTag == null ||
-            note.tagList().any { tag -> searchKey(tag) == searchKey(selectedTag) }
+        val matchesTag = activeTag == null ||
+            note.tagList().any { tag -> searchKey(tag) == searchKey(activeTag) }
         matchesQuery && matchesTag
     }
 

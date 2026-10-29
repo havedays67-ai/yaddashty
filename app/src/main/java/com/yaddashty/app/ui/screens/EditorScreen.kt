@@ -117,7 +117,7 @@ fun EditorScreen(
             val draft = pendingDraft
             if (draft.dirty) {
                 viewModel.saveEdited(
-                    noteId = noteId,
+                    id = noteId,
                     title = draft.title,
                     body = draft.body,
                     color = draft.color,
