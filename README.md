@@ -17,9 +17,9 @@
 </div>
 
 <!-- build-info:start -->
-> 🛠 **آخرین بیلد موفق:** `2026-10-29T12:16:22Z`  
+> 🛠 **آخرین بیلد موفق:** `2026-10-29T12:22:23Z`  
 > 📦 حجم فایل: 16.84 مگابایت · نسخه: **۱**  
-> 🔐 SHA-256: `773ef7d75fd8ee5d338bf24591c050071dfd046572cf3c09264d51bc4cb149cd`  
+> 🔐 SHA-256: `04e8ac3667d226b6d0eeb8ec4f104987efbff5421d35f7d924ca88cfc4b86cb8`  
 > [دانلود مستقیم APK](https://github.com/havedays67-ai/yaddashty/releases/latest/download/yaddashty-v1.apk)
 <!-- build-info:end -->
 
