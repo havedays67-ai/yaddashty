@@ -1,11 +1,11 @@
 # 🎮 بازی دو بعدی نبرد نئون کهکشانی (Neon Cyber Galaxy 2D) + SDK تپسل پلاس
 
 <!-- build-info:start -->
-> 🛠 **آخرین بیلد موفق:** `2026-11-03T19:10:00Z`  
+> 🛠 **آخرین بیلد موفق:** `2026-11-03T19:15:07Z`  
 > 📱 **پشتیبانی اندروید:** اندروید ۸.۰ به بالا (`minSdk 26` / `targetSdk 35`)  
-> 📦 **حجم فایل APK:** 17.20 مگابایت · نسخه: **۱**  
-> 🔐 **امضای فایل (SHA-256):** `446140a3444432f8bfbf3096f6f0420f4e2c3c3de39bc4f75556ad01171ee964`  
-> 🔏 **امضای گواهی دیجیتال APK (Cert SHA-256):** `signed-v2-v3`  
+> 📦 **حجم فایل APK:** 22.59 مگابایت · نسخه: **۱**  
+> 🔐 **امضای فایل (SHA-256):** `498e1f3379de49c38129d96c566c594b29dd1cc5adb3a8951e6ae748359894ec`  
+> 🔏 **امضای گواهی دیجیتال APK (Cert SHA-256):** `6bee3c0a4a5f807151e9593925265a0ab55c24d7114816216e7c9e2fe2d3f36b`  
 > 📥 **[دانلود مستقیم فایل APK (GitHub Release)](https://github.com/havedays67-ai/yaddashty/releases/latest/download/yaddashty-v1.apk)** · **[دانلود مستقیم از شاخه اصلی (Raw APK)](https://github.com/havedays67-ai/yaddashty/raw/main/releases/yaddashty-v1.apk)**
 <!-- build-info:end -->
 

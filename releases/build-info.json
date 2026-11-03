@@ -1,11 +1,14 @@
 {
-  "app": "Yaddashty",
+  "app": "NeonGalaxyYaddashty",
   "version": 1,
   "versionName": "1",
+  "minSdk": 26,
+  "targetSdk": 35,
   "asset": "yaddashty-v1.apk",
-  "sizeBytes": 17673685,
-  "sha256": "446140a3444432f8bfbf3096f6f0420f4e2c3c3de39bc4f75556ad01171ee964",
-  "builtAt": "2026-10-29T14:30:51Z",
-  "commit": "22a2be7757146f8bb7f2a508cbb53212a55ba0a8",
-  "runUrl": "https://github.com/havedays67-ai/yaddashty/actions/runs/40892014038"
+  "sizeBytes": 23687583,
+  "sha256": "498e1f3379de49c38129d96c566c594b29dd1cc5adb3a8951e6ae748359894ec",
+  "apkCertSha256": "6bee3c0a4a5f807151e9593925265a0ab55c24d7114816216e7c9e2fe2d3f36b",
+  "builtAt": "2026-11-03T19:15:07Z",
+  "commit": "98af73dbef8384b234914e4b25e9237917927b2a",
+  "runUrl": "https://github.com/havedays67-ai/yaddashty/actions/runs/41701144476"
 }
