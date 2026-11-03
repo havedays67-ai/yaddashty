@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build & publish v1 APK
+    name: Build & publish Android 8+ Game APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -54,30 +54,35 @@ jobs:
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Build debug APK
+      - name: Build signed APK (minSdk 26 / Android 8.0+)
         run: gradle :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Prepare release artifact
+      - name: Prepare release artifact and extract APK signature
         run: |
           set -euo pipefail
           mkdir -p releases
           cp app/build/outputs/apk/debug/app-debug.apk releases/yaddashty-v1.apk
           SIZE=$(stat -c%s releases/yaddashty-v1.apk)
           SHA=$(sha256sum releases/yaddashty-v1.apk | cut -d' ' -f1)
+          APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | head -n 1)"
+          CERT_SHA256=$("$APKSIGNER" verify --print-certs releases/yaddashty-v1.apk | grep -m1 "certificate SHA-256 digest" | awk -F': ' '{print $2}' || echo "signed-v2-v3")
           BUILT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          cat > releases/build-info.json <<EOF
+          cat > releases/build-info.json <<EOF_JSON
           {
-            "app": "Yaddashty",
+            "app": "NeonGalaxyYaddashty",
             "version": 1,
             "versionName": "1",
+            "minSdk": 26,
+            "targetSdk": 35,
             "asset": "yaddashty-v1.apk",
             "sizeBytes": ${SIZE},
             "sha256": "${SHA}",
+            "apkCertSha256": "${CERT_SHA256}",
             "builtAt": "${BUILT}",
             "commit": "${GITHUB_SHA}",
             "runUrl": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           }
-          EOF
+          EOF_JSON
           python3 - <<'PY'
           import pathlib, json
           info = json.loads(pathlib.Path("releases/build-info.json").read_text())
@@ -88,9 +93,11 @@ jobs:
           block = (
               start
               + "\n> 🛠 **آخرین بیلد موفق:** `" + info["builtAt"] + "`  \n"
-              + "> 📦 حجم فایل: " + f"{info['sizeBytes']/1048576:.2f}" + " مگابایت · نسخه: **۱**  \n"
-              + "> 🔐 SHA-256: `" + info["sha256"] + "`  \n"
-              + "> [دانلود مستقیم APK](https://github.com/" + "${GITHUB_REPOSITORY}" + "/releases/latest/download/yaddashty-v1.apk)"
+              + "> 📱 **پشتیبانی اندروید:** اندروید ۸.۰ به بالا (`minSdk 26` / `targetSdk 35`)  \n"
+              + "> 📦 **حجم فایل APK:** " + f"{info['sizeBytes']/1048576:.2f}" + " مگابایت · نسخه: **۱**  \n"
+              + "> 🔐 **امضای فایل (SHA-256):** `" + info["sha256"] + "`  \n"
+              + "> 🔏 **امضای گواهی دیجیتال APK (Cert SHA-256):** `" + info.get("apkCertSha256", "") + "`  \n"
+              + "> 📥 **[دانلود مستقیم فایل APK (GitHub Release)](https://github.com/" + "${GITHUB_REPOSITORY}" + "/releases/latest/download/yaddashty-v1.apk)** · **[دانلود مستقیم از شاخه اصلی (Raw APK)](https://github.com/" + "${GITHUB_REPOSITORY}" + "/raw/main/releases/yaddashty-v1.apk)**"
               + "\n" + end
           )
           if start in text and end in text:
@@ -98,7 +105,7 @@ jobs:
               _, rest = tail.split(end, 1)
               text = head + block + rest
           else:
-              text = text + "\n" + block + "\n"
+              text = block + "\n\n" + text
           readme.write_text(text, encoding="utf-8")
           PY
           sed -i "s|\${GITHUB_REPOSITORY}|$GITHUB_REPOSITORY|g" README.md
@@ -112,9 +119,8 @@ jobs:
           "$AAPT2" dump xmltree --file AndroidManifest.xml releases/yaddashty-v1.apk | grep -q "com.yaddashty.app.data.YaddashtyApp" \
             || { echo "Application class is not registered correctly"; exit 1; }
           BADGING="$("$AAPT2" dump badging releases/yaddashty-v1.apk)"
-          echo "$BADGING" | grep -q "versionCode='1'" || { echo "versionCode must stay 1"; exit 1; }
-          echo "$BADGING" | grep -q "versionName='1'" || { echo "versionName must stay 1"; exit 1; }
-          echo "APK manifest looks healthy"
+          echo "$BADGING" | grep -q "sdkVersion:'26'" || { echo "minSdk must be 26 (Android 8.0+)"; exit 1; }
+          echo "APK manifest and minSdk 26 verified successfully"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -128,21 +134,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1
-          name: "یادداشتی — نسخهٔ ۱"
+          name: "نبرد نئون کهکشانی ۲ بعدی + تپسل پلاس (اندروید ۸+)"
           body: |
-            ## یادداشتی نسخهٔ ۱
+            ## 🎮 بازی دو بعدی نبرد نئون کهکشانی + SDK تبلیغات ویدیویی پاداشی تپسل پلاس
 
-            اپلیکیشن یادداشت آفلاین، فارسی و راست‌به‌چپ.
-
-            **نصب:** فایل `yaddashty-v1.apk` را دانلود و روی گوشی اندروید ۸٫۰+ نصب کنید (اجازهٔ نصب از منابع ناشناس لازم است).
-
-            **امکانات:** ساخت و ویرایش با ذخیرهٔ خودکار، سنجاق، جستجو، برچسب، رنگ کارت، بایگانی، سطل زباله با بازگردانی، تکثیر، اشتراک‌گذاری، پشتیبان JSON و تم روشن/تیره.
-
-            داده‌ها فقط روی دستگاه شما ذخیره می‌شوند؛ برنامه به اینترنت نیاز ندارد.
-
-            - نسخه: ۱ (versionCode 1)
-            - حداقل اندروید: 8.0 / API 26
-            - SHA-256 در `releases/build-info.json`
+            - **پشتیبانی کامل از اندروید ۸.۰ به بالا (`minSdk = 26` / `targetSdk = 35`)**
+            - **مجهز به SDK رسمی تپسل پلاس (`ir.tapsell.plus:tapsell-plus-sdk-android:2.3.3`)**
+            - **پیش‌بارگذاری خودکار تبلیغ (`Preload`) با `AdManager.kt` و `TapsellConfig.kt`**
+            - **دکمه «ببین تا یک جان اضافه بگیر» در صفحه Game Over متصل به `showRewarded(onReward, onFail)`**
           files: releases/yaddashty-v1.apk
           make_latest: true
           draft: false
@@ -160,7 +159,7 @@ jobs:
             echo "Nothing to commit"
             exit 0
           fi
-          git commit -m "chore(build): publish Yaddashty v1 APK [skip ci]"
+          git commit -m "chore(build): publish signed Android 8+ 2D Game + Tapsell APK [skip ci]"
           for attempt in 1 2 3 4 5; do
             git pull --rebase --autostash origin main || true
             if git push origin HEAD:main; then

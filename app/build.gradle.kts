@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.yaddashty.app"
-        minSdk = 26
+        minSdk = 26 // پشتیبانی از اندروید ۸.۰ (Oreo) به بالا
         targetSdk = 35
         versionCode = 1
         versionName = "1"
@@ -44,6 +44,9 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE*"
+            excludes += "META-INF/NOTICE*"
         }
     }
 }
@@ -53,6 +56,7 @@ dependencies {
 
     implementation(composeBom)
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
@@ -67,6 +71,9 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // SDK رسمی فعلی تپسل پلاس برای تبلیغات ویدیویی پاداشی (Rewarded Video)
+    implementation("ir.tapsell.plus:tapsell-plus-sdk-android:2.3.3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

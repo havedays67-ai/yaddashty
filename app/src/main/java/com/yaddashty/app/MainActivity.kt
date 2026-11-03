@@ -20,10 +20,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.yaddashty.app.ads.AdManager
 import com.yaddashty.app.data.YaddashtyApp
 import com.yaddashty.app.ui.NotesViewModel
 import com.yaddashty.app.ui.NotesViewModelFactory
 import com.yaddashty.app.ui.screens.EditorScreen
+import com.yaddashty.app.ui.screens.NeonGameScreen
 import com.yaddashty.app.ui.screens.NoteMode
 import com.yaddashty.app.ui.screens.NotesListScreen
 import com.yaddashty.app.ui.screens.SettingsScreen
@@ -33,6 +35,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        // پیش‌بارگذاری اولیه SDK تپسل پلاس در شروع برنامه
+        AdManager.initialize(this)
+
         setContent {
             val app = application as YaddashtyApp
             val notesViewModel: NotesViewModel = viewModel(
@@ -61,7 +66,12 @@ private fun YaddashtyRoot(viewModel: NotesViewModel) {
     val navController = rememberNavController()
     val openSettings = { navController.navigate("settings") }
 
-    NavHost(navController = navController, startDestination = "notes") {
+    NavHost(navController = navController, startDestination = "game") {
+        composable("game") {
+            NeonGameScreen(
+                onOpenNotes = { navController.navigate("notes") }
+            )
+        }
         composable("notes") {
             NotesListScreen(
                 viewModel = viewModel,
